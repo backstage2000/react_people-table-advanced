@@ -1,18 +1,25 @@
-import { PeoplePage } from './components/PeoplePage';
 import { Navbar } from './components/Navbar';
 
 import './App.scss';
+import { Outlet, useLocation } from 'react-router-dom';
 
 export const App = () => {
+  const { pathname, search } = useLocation();
+
   return (
     <div data-cy="app">
+      <div>
+        <p className="title is-5 has-text-info">{pathname}</p>
+      </div>
+      {''}
+      <div>
+        <p className="title is-6">{search && search.replace('&', ' &')}</p>
+      </div>
       <Navbar />
 
       <div className="section">
         <div className="container">
-          <h1 className="title">Home Page</h1>
-          <h1 className="title">Page not found</h1>
-          <PeoplePage />
+          <Outlet />
         </div>
       </div>
     </div>
