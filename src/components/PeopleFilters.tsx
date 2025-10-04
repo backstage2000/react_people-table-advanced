@@ -1,7 +1,8 @@
 import cn from 'classnames';
-import { useSearchParams } from 'react-router-dom';
+import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import { Person } from '../types';
 import { getCentury } from '../utils/getCentury';
+import { useEffect } from 'react';
 
 type Props = {
   people: Person[];
@@ -11,7 +12,6 @@ type Props = {
 };
 
 export const PeopleFilters: React.FC<Props> = ({
-  people,
   allPeople,
   setPeople,
   setIsFilteredEmpty,
@@ -19,81 +19,84 @@ export const PeopleFilters: React.FC<Props> = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const centurys = ['16', '17', '18', '19', '20'];
 
-  console.log(`people`, people);
-  console.log(`allPeople:`, allPeople);
+  const { pathname, search } = useLocation();
 
-  const query = searchParams.get('query') || '';
-  const century = searchParams.getAll('century') || [];
+  const valueQuery = searchParams.get('query') || '';
+  const valueCenturys = searchParams.getAll('century');
 
-  function filterCentury(centur: string[]) {
-    if (!centur.length) {
-      setPeople(allPeople);
+  function applyFilters(arg?: string) {
+    const query = (searchParams.get('query') || '').toLowerCase().trim();
+    const centuries = searchParams.getAll('century');
+    let result = allPeople;
+
+    console.log('inside');
+    console.log('start filter', result);
+
+    if (query) {
+      result = result.filter(p => {
+        const fields = [p.name, p.motherName, p.fatherName].filter(Boolean);
+
+        return fields.some(f => f?.toLowerCase().includes(query));
+      });
+    }
+
+    if (centuries.length) {
+      result = result.filter(p => {
+        const born = getCentury(p.born);
+        const died = getCentury(p.died);
+
+        return (
+          (born && centuries.includes(born)) ||
+          (died && centuries.includes(died))
+        );
+      });
+    }
+
+    if (arg === 'sex=f') {
+      result = result.filter(f => f.sex === 'f');
+      setPeople(result);
+      setIsFilteredEmpty(result.length === 0);
 
       return;
     }
 
-    const res = allPeople.filter(p => {
-      const born = getCentury(p.born);
-      const died = getCentury(p.died);
+    setPeople(result);
 
-      return (born && centur.includes(born)) || (died && centur.includes(died));
-    });
-
-    setPeople(res);
+    setIsFilteredEmpty(result.length === 0);
   }
+
+  useEffect(() => {
+    applyFilters();
+  }, [searchParams, allPeople]);
 
   function handleQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
     const val = event.target.value.toLowerCase();
 
     const params = new URLSearchParams(searchParams);
 
-    params.set('query', event.target.value);
-    setSearchParams(params);
-
-    if (!val) {
-      setPeople(allPeople);
-      setIsFilteredEmpty(false);
-
-      return;
+    if (val.trim()) {
+      params.set('query', val);
+    } else {
+      params.delete('query');
     }
 
-    const resultFilter = people.filter(person => {
-      const fields = [person.name, person.motherName, person.fatherName];
-
-      const result = fields.some(field => {
-        const check = field?.toLowerCase().includes(val);
-
-        return check;
-      });
-
-      return result;
-    });
-
-    setPeople(resultFilter);
-    setIsFilteredEmpty(resultFilter.length === 0);
+    setSearchParams(params);
   }
 
-  function toggleCentury(argCentury: string) {
+  function toggleCentury(c: string) {
     const params = new URLSearchParams(searchParams);
-
-    const newCenturys = century.includes(argCentury)
-      ? century.filter(c => c !== argCentury)
-      : [...century, argCentury];
+    const current = params.getAll('century');
+    const next = current.includes(c)
+      ? current.filter(x => x !== c)
+      : [...current, c];
 
     params.delete('century');
-
-    newCenturys.forEach(c => params.append('century', c));
-
+    next.forEach(x => params.append('century', x));
     setSearchParams(params);
-
-    if (newCenturys.length !== 0) {
-      filterCentury(newCenturys);
-    }
   }
 
   function clearFilter() {
     setSearchParams(new URLSearchParams());
-    setPeople(allPeople);
   }
 
   return (
@@ -101,15 +104,37 @@ export const PeopleFilters: React.FC<Props> = ({
       <p className="panel-heading">Filters</p>
 
       <p className="panel-tabs" data-cy="SexFilter">
-        <a className="is-active" href="#/people">
+        <Link
+          className={cn('', {
+            'is-active':
+              pathname === '/people' &&
+              search !== '?sex=m' &&
+              search !== '?sex=f',
+          })}
+          onClick={() => applyFilters('All')}
+          to={'.'}
+        >
           All
-        </a>
-        <a className="" href="#/people?sex=m">
+        </Link>
+        <Link
+          className={cn('', {
+            'is-active': search === '?sex=m',
+          })}
+          to={'/people?sex=m'}
+        >
           Male
-        </a>
-        <a className="" href="#/people?sex=f">
+        </Link>
+        <Link
+          className={cn('', {
+            'is-active': search === '?sex=f',
+          })}
+          to={'/people?sex=f'}
+          onClick={() => {
+            applyFilters('sex=f');
+          }}
+        >
           Female
-        </a>
+        </Link>
       </p>
 
       <div className="panel-block">
@@ -119,7 +144,7 @@ export const PeopleFilters: React.FC<Props> = ({
             type="search"
             className="input"
             placeholder="Search"
-            value={query}
+            value={valueQuery}
             onChange={handleQueryChange}
           />
 
@@ -137,12 +162,12 @@ export const PeopleFilters: React.FC<Props> = ({
                 key={centur}
                 data-cy="century"
                 className={cn('button mr-1', {
-                  'is-info': century.includes(centur),
+                  'is-info': valueCenturys.includes(centur),
                 })}
                 onClick={() => {
                   toggleCentury(centur);
                 }}
-                // href={`#/people?centuries=${centur}`}
+                // to={`#/people?centuries=${centur}`}
               >
                 {centur}
               </button>
@@ -150,25 +175,27 @@ export const PeopleFilters: React.FC<Props> = ({
           </div>
 
           <div className="level-right ml-4">
-            <a
+            <Link
               data-cy="centuryALL"
-              className="button is-success is-outlined"
-              href="#/people"
+              className={cn('button is-success', {
+                'is-outlined': valueCenturys.length,
+              })}
+              to={'.'}
             >
               All
-            </a>
+            </Link>
           </div>
         </div>
       </div>
 
       <div className="panel-block">
-        <a
+        <Link
           onClick={clearFilter}
           className="button is-link is-outlined is-fullwidth"
-          href="#/people"
+          to={`.`}
         >
           Reset all filters
-        </a>
+        </Link>
       </div>
     </nav>
   );
