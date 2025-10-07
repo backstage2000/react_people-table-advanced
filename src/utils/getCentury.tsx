@@ -1,7 +1,13 @@
-export function getCentury(year: number | null | undefined): string | null {
-  if (!year) {
-    return null;
+export function getCentury(year: number | string | null | undefined): string {
+  const n = Number(year);
+
+  if (!Number.isFinite(n) || n === 0) {
+    return '0';
   }
 
-  return Math.ceil(year / 100).toString();
+  if (n < 0) {
+    return '0';
+  }
+
+  return String(Math.ceil(n / 100));
 }

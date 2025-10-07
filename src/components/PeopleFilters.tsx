@@ -1,102 +1,39 @@
 import cn from 'classnames';
-import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom';
-import { Person } from '../types';
-import { getCentury } from '../utils/getCentury';
-import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { getSearchWith } from '../utils/searchHelper';
+import { SearchLink } from './SearchLink';
 
-type Props = {
-  people: Person[];
-  allPeople: Person[];
-  setPeople: (val: Person[]) => void;
-  setIsFilteredEmpty: (val: boolean) => void;
-};
-
-export const PeopleFilters: React.FC<Props> = ({
-  allPeople,
-  setPeople,
-  setIsFilteredEmpty,
-}) => {
+export const PeopleFilters: React.FC = ({}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const centurys = ['16', '17', '18', '19', '20'];
 
-  const { pathname, search } = useLocation();
-
   const valueQuery = searchParams.get('query') || '';
-  const valueCenturys = searchParams.getAll('century');
+  const valueCenturys = searchParams.getAll('centuries');
+  const valueSex = searchParams.get('sex');
 
-  function applyFilters(arg?: string) {
-    const query = (searchParams.get('query') || '').toLowerCase().trim();
-    const centuries = searchParams.getAll('century');
-    let result = allPeople;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function setSearchWith(params: any) {
+    const search = getSearchWith(searchParams, params);
 
-    console.log('inside');
-    console.log('start filter', result);
-
-    if (query) {
-      result = result.filter(p => {
-        const fields = [p.name, p.motherName, p.fatherName].filter(Boolean);
-
-        return fields.some(f => f?.toLowerCase().includes(query));
-      });
-    }
-
-    if (centuries.length) {
-      result = result.filter(p => {
-        const born = getCentury(p.born);
-        const died = getCentury(p.died);
-
-        return (
-          (born && centuries.includes(born)) ||
-          (died && centuries.includes(died))
-        );
-      });
-    }
-
-    if (arg === 'sex=f') {
-      result = result.filter(f => f.sex === 'f');
-      setPeople(result);
-      setIsFilteredEmpty(result.length === 0);
-
-      return;
-    }
-
-    setPeople(result);
-
-    setIsFilteredEmpty(result.length === 0);
+    setSearchParams(search);
   }
 
-  useEffect(() => {
-    applyFilters();
-  }, [searchParams, allPeople]);
+  function handleQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value.toLowerCase();
 
-  function handleQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const val = event.target.value.toLowerCase();
-
-    const params = new URLSearchParams(searchParams);
-
-    if (val.trim()) {
-      params.set('query', val);
-    } else {
-      params.delete('query');
-    }
-
-    setSearchParams(params);
+    setSearchWith({ query: val.trim() || null });
   }
 
   function toggleCentury(c: string) {
-    const params = new URLSearchParams(searchParams);
-    const current = params.getAll('century');
-    const next = current.includes(c)
-      ? current.filter(x => x !== c)
-      : [...current, c];
+    const newCentury = valueCenturys.includes(c)
+      ? valueCenturys.filter(x => x !== c)
+      : [...valueCenturys, c];
 
-    params.delete('century');
-    next.forEach(x => params.append('century', x));
-    setSearchParams(params);
+    setSearchWith({ centuries: newCentury || null });
   }
 
   function clearFilter() {
-    setSearchParams(new URLSearchParams());
+    setSearchParams(new URLSearchParams(searchParams));
   }
 
   return (
@@ -104,37 +41,30 @@ export const PeopleFilters: React.FC<Props> = ({
       <p className="panel-heading">Filters</p>
 
       <p className="panel-tabs" data-cy="SexFilter">
-        <Link
+        <SearchLink
           className={cn('', {
-            'is-active':
-              pathname === '/people' &&
-              search !== '?sex=m' &&
-              search !== '?sex=f',
+            'is-active': !valueSex,
           })}
-          onClick={() => applyFilters('All')}
-          to={'.'}
+          params={{ sex: null }}
         >
           All
-        </Link>
-        <Link
+        </SearchLink>
+        <SearchLink
+          params={{ sex: 'm' }}
           className={cn('', {
-            'is-active': search === '?sex=m',
+            'is-active': valueSex === 'm',
           })}
-          to={'/people?sex=m'}
         >
           Male
-        </Link>
-        <Link
+        </SearchLink>
+        <SearchLink
+          params={{ sex: 'f' }}
           className={cn('', {
-            'is-active': search === '?sex=f',
+            'is-active': valueSex === 'f',
           })}
-          to={'/people?sex=f'}
-          onClick={() => {
-            applyFilters('sex=f');
-          }}
         >
-          Female
-        </Link>
+          Male
+        </SearchLink>
       </p>
 
       <div className="panel-block">
@@ -167,7 +97,6 @@ export const PeopleFilters: React.FC<Props> = ({
                 onClick={() => {
                   toggleCentury(centur);
                 }}
-                // to={`#/people?centuries=${centur}`}
               >
                 {centur}
               </button>
@@ -175,27 +104,27 @@ export const PeopleFilters: React.FC<Props> = ({
           </div>
 
           <div className="level-right ml-4">
-            <Link
+            <SearchLink
               data-cy="centuryALL"
               className={cn('button is-success', {
                 'is-outlined': valueCenturys.length,
               })}
-              to={'.'}
+              params={{ centuries: null }}
             >
               All
-            </Link>
+            </SearchLink>
           </div>
         </div>
       </div>
 
       <div className="panel-block">
-        <Link
+        <SearchLink
           onClick={clearFilter}
           className="button is-link is-outlined is-fullwidth"
-          to={`.`}
+          params={{ sex: null, centuries: null, query: null }}
         >
           Reset all filters
-        </Link>
+        </SearchLink>
       </div>
     </nav>
   );

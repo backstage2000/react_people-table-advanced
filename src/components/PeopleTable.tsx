@@ -2,6 +2,9 @@ import cn from 'classnames';
 import { Loader } from './Loader';
 import { Person } from '../types';
 import { PersonLink } from '../utils/PersonLink';
+import { useSearchParams } from 'react-router-dom';
+import classNames from 'classnames';
+import { SearchLink } from './SearchLink';
 
 /* eslint-disable jsx-a11y/control-has-associated-label */
 type Props = {
@@ -19,6 +22,41 @@ export const PeopleTable: React.FC<Props> = ({
   isError,
   isEmpty,
 }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  function toggleSort(field: string) {
+    const currentSort = searchParams.get('sort');
+    const currentOrder = searchParams.get('order');
+
+    const next = new URLSearchParams(searchParams);
+
+    if (currentSort !== field) {
+      next.set('sort', field);
+
+      next.delete('order');
+    } else if (!currentOrder) {
+      next.set('order', 'desc');
+    } else {
+      next.delete('sort');
+      next.delete('order');
+    }
+
+    setSearchParams(next);
+  }
+
+  function iconClassFor(nameSort: string) {
+    const sort = searchParams.get('sort');
+    const order = searchParams.get('order');
+
+    const isActive = sort === nameSort;
+
+    return classNames('fas', {
+      'fa-sort': !isActive,
+      'fa-sort-up': isActive && !order,
+      'fa-sort-down': isActive && order === 'desc',
+    });
+  }
+
   return (
     <div className="box table-container">
       {isLoading && <Loader />}
@@ -46,45 +84,67 @@ export const PeopleTable: React.FC<Props> = ({
           <thead>
             <tr>
               <th>
-                {' '}
                 <span className="is-flex is-flex-wrap-nowrap">
                   Name
-                  <a href="#/people?sort=name">
+                  <SearchLink
+                    onClick={e => {
+                      e.preventDefault();
+                      toggleSort('name');
+                    }}
+                    params={{ sort: 'name' }}
+                  >
                     <span className="icon">
-                      <i className="fas fa-sort" />
+                      <i className={iconClassFor('name')} />
                     </span>
-                  </a>
+                  </SearchLink>
                 </span>
               </th>
               <th>
-                {' '}
                 <span className="is-flex is-flex-wrap-nowrap">
                   Sex
-                  <a href="#/people?sort=sex">
+                  <SearchLink
+                    params={{ sort: 'sex' }}
+                    onClick={e => {
+                      e.preventDefault();
+                      toggleSort('sex');
+                    }}
+                  >
                     <span className="icon">
-                      <i className="fas fa-sort" />
+                      <i className={iconClassFor('sex')} />
                     </span>
-                  </a>
+                  </SearchLink>
                 </span>
               </th>
               <th>
                 <span className="is-flex is-flex-wrap-nowrap">
                   Born
-                  <a href="#/people?sort=born&amp;order=desc">
+                  <SearchLink
+                    params={{ sort: 'born' }}
+                    onClick={e => {
+                      e.preventDefault();
+                      toggleSort('born');
+                    }}
+                  >
                     <span className="icon">
-                      <i className="fas fa-sort" />
+                      <i className={iconClassFor('born')} />
                     </span>
-                  </a>
+                  </SearchLink>
                 </span>
               </th>
               <th>
                 <span className="is-flex is-flex-wrap-nowrap">
                   Died
-                  <a href="#/people?sort=died">
+                  <SearchLink
+                    onClick={e => {
+                      e.preventDefault();
+                      toggleSort('died');
+                    }}
+                    params={{ sort: 'died' }}
+                  >
                     <span className="icon">
-                      <i className="fas fa-sort" />
+                      <i className={iconClassFor('died')} />
                     </span>
-                  </a>
+                  </SearchLink>
                 </span>
               </th>
               <th>Mother</th>
