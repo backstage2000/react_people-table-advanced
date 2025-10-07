@@ -2,7 +2,7 @@ import { PeopleFilters } from './PeopleFilters';
 
 import { PeopleTable } from './PeopleTable';
 import { Person, PersonKey } from '../types';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { getPeople } from '../api';
 import { getCentury } from '../utils/getCentury';
@@ -18,7 +18,7 @@ export const PeoplePage = () => {
 
   const [searchParams] = useSearchParams();
 
-  function applyFilters() {
+  const applyFilters = useCallback(() => {
     const query = (searchParams.get('query') || '').toLowerCase().trim();
     const centuries = searchParams.getAll('centuries');
     const sex = searchParams.get('sex');
@@ -71,11 +71,11 @@ export const PeoplePage = () => {
     setPeople(result);
 
     setIsFilteredEmpty(result.length === 0);
-  }
+  }, [searchParams, allPeople]);
 
   useEffect(() => {
     applyFilters();
-  }, [searchParams, allPeople]);
+  }, [applyFilters]);
 
   const { slug } = useParams();
 
