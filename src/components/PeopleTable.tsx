@@ -2,9 +2,7 @@ import cn from 'classnames';
 import { Loader } from './Loader';
 import { Person } from '../types';
 import { PersonLink } from '../utils/PersonLink';
-import { useSearchParams } from 'react-router-dom';
-import classNames from 'classnames';
-import { SearchLink } from './SearchLink';
+import { Link, useSearchParams } from 'react-router-dom';
 
 /* eslint-disable jsx-a11y/control-has-associated-label */
 type Props = {
@@ -50,7 +48,7 @@ export const PeopleTable: React.FC<Props> = ({
 
     const isActive = sort === nameSort;
 
-    return classNames('fas', {
+    return cn('fas', {
       'fa-sort': !isActive,
       'fa-sort-up': isActive && !order,
       'fa-sort-down': isActive && order === 'desc',
@@ -86,24 +84,30 @@ export const PeopleTable: React.FC<Props> = ({
               <th>
                 <span className="is-flex is-flex-wrap-nowrap">
                   Name
-                  <SearchLink
+                  <Link
                     onClick={e => {
                       e.preventDefault();
                       toggleSort('name');
                     }}
-                    params={{ sort: 'name' }}
+                    to={{
+                      pathname: '/people',
+                      search: searchParams.toString(),
+                    }}
                   >
                     <span className="icon">
                       <i className={iconClassFor('name')} />
                     </span>
-                  </SearchLink>
+                  </Link>
                 </span>
               </th>
               <th>
                 <span className="is-flex is-flex-wrap-nowrap">
                   Sex
-                  <SearchLink
-                    params={{ sort: 'sex' }}
+                  <Link
+                    to={{
+                      pathname: '/people',
+                      search: searchParams.toString(),
+                    }}
                     onClick={e => {
                       e.preventDefault();
                       toggleSort('sex');
@@ -112,14 +116,17 @@ export const PeopleTable: React.FC<Props> = ({
                     <span className="icon">
                       <i className={iconClassFor('sex')} />
                     </span>
-                  </SearchLink>
+                  </Link>
                 </span>
               </th>
               <th>
                 <span className="is-flex is-flex-wrap-nowrap">
                   Born
-                  <SearchLink
-                    params={{ sort: 'born' }}
+                  <Link
+                    to={{
+                      pathname: '/people',
+                      search: searchParams.toString(),
+                    }}
                     onClick={e => {
                       e.preventDefault();
                       toggleSort('born');
@@ -128,23 +135,26 @@ export const PeopleTable: React.FC<Props> = ({
                     <span className="icon">
                       <i className={iconClassFor('born')} />
                     </span>
-                  </SearchLink>
+                  </Link>
                 </span>
               </th>
               <th>
                 <span className="is-flex is-flex-wrap-nowrap">
                   Died
-                  <SearchLink
+                  <Link
                     onClick={e => {
                       e.preventDefault();
                       toggleSort('died');
                     }}
-                    params={{ sort: 'died' }}
+                    to={{
+                      pathname: '/people',
+                      search: searchParams.toString(),
+                    }}
                   >
                     <span className="icon">
                       <i className={iconClassFor('died')} />
                     </span>
-                  </SearchLink>
+                  </Link>
                 </span>
               </th>
               <th>Mother</th>

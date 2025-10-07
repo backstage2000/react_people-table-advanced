@@ -93,7 +93,6 @@ export const PeoplePage = () => {
         setAllPeople(result);
         setIsLoading(false);
       } catch (error) {
-        setIsLoading(false);
         setIsError(true);
 
         // eslint-disable-next-line no-console
@@ -112,7 +111,7 @@ export const PeoplePage = () => {
 
       <div className="block">
         <div className="columns is-desktop is-flex-direction-row-reverse">
-          {!!allPeople.length && (
+          {!isLoading && !isError && (
             <div className="column is-7-tablet is-narrow-desktop">
               <PeopleFilters />
             </div>

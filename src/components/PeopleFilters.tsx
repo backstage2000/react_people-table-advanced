@@ -19,7 +19,7 @@ export const PeopleFilters: React.FC = ({}) => {
   }
 
   function handleQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value.toLowerCase();
+    const val = e.target.value;
 
     setSearchWith({ query: val.trim() || null });
   }
@@ -30,10 +30,6 @@ export const PeopleFilters: React.FC = ({}) => {
       : [...valueCenturys, c];
 
     setSearchWith({ centuries: newCentury || null });
-  }
-
-  function clearFilter() {
-    setSearchParams(new URLSearchParams(searchParams));
   }
 
   return (
@@ -63,7 +59,7 @@ export const PeopleFilters: React.FC = ({}) => {
             'is-active': valueSex === 'f',
           })}
         >
-          Male
+          Female
         </SearchLink>
       </p>
 
@@ -119,7 +115,6 @@ export const PeopleFilters: React.FC = ({}) => {
 
       <div className="panel-block">
         <SearchLink
-          onClick={clearFilter}
           className="button is-link is-outlined is-fullwidth"
           params={{ sex: null, centuries: null, query: null }}
         >
